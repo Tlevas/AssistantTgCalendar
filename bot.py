@@ -125,14 +125,13 @@ async def handle_message(bot: Bot, msg):
     try:
         link = await asyncio.to_thread(insert_event, email, start, end, title)
     except HttpError as e:
-        if getattr(e.resp, "status", None) in (403, 404):
-            await bot.send_message(
-                chat_id,
-                f"❌ Нет доступа к календарю {email}.\n"
-                f"Дай аккаунту {SERVICE_EMAIL} право «Вносить изменения в мероприятия».",
-            )
-        else:
-            await bot.send_message(chat_id, f"❌ Ошибка Google Calendar: {e}")
+        status = getattr(e.resp, "status", None)
+        reason = getattr(e, "reason", "") or str(e)
+        await bot.send_message(
+            chat_id,
+            f"❌ Не удалось создать событие в календаре «{email}».\n"
+            f"Код: {status}\nПричина Google: {reason}",
+        )
         return
 
     await bot.send_message(
@@ -169,3 +168,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    
