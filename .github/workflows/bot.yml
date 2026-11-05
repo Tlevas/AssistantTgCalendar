@@ -5,6 +5,10 @@ on:
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
+permissions:
+  actions: write
+  contents: read
+
 # Одновременно работает один запуск, следующий ждёт в очереди
 concurrency:
   group: calendar-bot
@@ -27,4 +31,10 @@ jobs:
           SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           ALLOWED_USER_IDS: ${{ secrets.ALLOWED_USER_IDS }}
           TIMEZONE: ${{ vars.TIMEZONE || 'Europe/Moscow' }}
+
+      - name: Запустить следующий прогон
+        if: success()
+        run: gh workflow run "calendar-bot"
+        env:
+          GH_TOKEN: ${{ github.token }}
           
