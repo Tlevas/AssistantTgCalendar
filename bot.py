@@ -11,6 +11,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from telegram.error import NetworkError
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -227,11 +228,16 @@ async def main():
             remaining = int(deadline - time.monotonic())
             if remaining <= 2:
                 break
-            updates = await bot.get_updates(
-                offset=offset,
-                timeout=min(25, remaining - 1),
-                allowed_updates=["message", "callback_query"],
-            )
+            try:
+                updates = await bot.get_updates(
+                    offset=offset,
+                    timeout=min(25, remaining - 1),
+                    allowed_updates=["message", "callback_query"],
+                )
+            except NetworkError as e:
+                print("Сетевая ошибка, повтор:", repr(e))
+                await asyncio.sleep(3)
+                continue
             for upd in updates:
                 offset = upd.update_id + 1
                 try:
@@ -242,7 +248,10 @@ async def main():
                 except Exception as e:  # одно сообщение не должно ронять бота
                     print("Ошибка обработки:", repr(e))
         if offset is not None:
-            await bot.get_updates(offset=offset, timeout=0, limit=1)
+            try:
+                await bot.get_updates(offset=offset, timeout=0, limit=1)
+            except NetworkError:
+                pass
 
 
 if __name__ == "__main__":
