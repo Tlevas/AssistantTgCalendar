@@ -33,8 +33,10 @@ jobs:
           TIMEZONE: ${{ vars.TIMEZONE || 'Europe/Moscow' }}
 
       - name: Запустить следующий прогон
-        if: success()
-        run: gh workflow run "calendar-bot"
+        if: always()
+        run: |
+          sleep 30
+          gh workflow run "calendar-bot"
         env:
           GH_TOKEN: ${{ github.token }}
           
