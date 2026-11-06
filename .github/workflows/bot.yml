@@ -17,7 +17,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,8 +35,13 @@ jobs:
       - name: Запустить следующий прогон
         if: always()
         run: |
-          sleep 30
-          gh workflow run "calendar-bot"
+          sleep 10
+          for i in 1 2 3 4 5 6; do
+            if gh workflow run "calendar-bot"; then exit 0; fi
+            echo "Попытка $i не удалась, жду"
+            sleep $((i * 15))
+          done
+          exit 1
         env:
           GH_TOKEN: ${{ github.token }}
           
